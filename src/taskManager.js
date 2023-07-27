@@ -3,6 +3,24 @@ import Task from './task.js';
 export default class TaskManager {
   constructor() {
     this.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    this.todoList = document.getElementById('todoList');
+    this.ul = document.querySelector('.list-container');
+    this.initListeners();
+    this.renderTasks();
+  }
+
+  initListeners() {
+    this.ul.addEventListener('click', (event) => {
+      const li = event.target.closest('li');
+      if (!li) return;
+      if (event.target.classList.contains('fa-trash-can')) {
+        this.handleDeleteTask(li);
+      } else if (event.target.classList.contains('checkbox')) {
+        this.handleToggleTaskComplete(li);
+      } else {
+        this.handleEditTask(li);
+      }
+    });
   }
 
   saveTasksToLocalStorage() {
@@ -10,77 +28,80 @@ export default class TaskManager {
   }
 
   renderTasks() {
-    const todoList = document.getElementById('todoList');
-    const ul = document.querySelector('.list-container');
-
-    this.tasks.sort((a, b) => a.index - b.index);
-
-    ul.innerHTML = '';
-
+    this.sortTasksByIndex();
+    this.ul.innerHTML = '';
     this.tasks.forEach((task) => {
-      const li = document.createElement('li');
-      li.innerHTML = `
-        <p>
-          <input class='checkbox' type='checkbox' ${task.completed ? 'checked' : ''}>
-          ${task.description}
-          <i class="fa-solid fa-ellipsis-vertical"></i>
-        </p>
-      `;
-
-      const optionIcon = li.querySelector('.fa-ellipsis-vertical');
-      optionIcon.addEventListener('click', (event) => {
-        event.stopPropagation();
-        optionIcon.classList.replace('fa-ellipsis-vertical', 'fa-trash-can');
-        li.style.backgroundColor = '#FFF9C4';
-        const trashIcon = li.querySelector('.fa-trash-can');
-        trashIcon.addEventListener('click', () => {
-          ul.removeChild(li);
-          this.deleteTask(task);
-        });
-      });
-
-      const checkbox = li.querySelector('.checkbox');
-      checkbox.addEventListener('click', (event) => {
-        event.stopPropagation();
-        li.classList.toggle('overline');
-        task.completed = checkbox.checked;
-        this.saveTasksToLocalStorage();
-      });
-
-      li.addEventListener('click', () => {
-        this.editPost(li, task);
-      });
-
-      ul.appendChild(li);
+      this.ul.appendChild(this.createTaskElement(task));
     });
-
-    todoList.appendChild(ul);
+    this.todoList.appendChild(this.ul);
   }
 
-  editPost(li, task) {
+  createTaskElement(task) {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <p>
+        <input class='checkbox' type='checkbox' ${task.completed ? 'checked' : ''}>
+        ${task.description}
+        <i class="fa-solid fa-ellipsis-vertical"></i>
+      </p>
+    `;
+    return li;
+  }
+
+  handleEditTask(li) {
+    const task = this.getTaskFromListItem(li);
     const p = li.querySelector('p');
     const currentDescription = task.description;
-
     const inputField = document.createElement('input');
     inputField.type = 'text';
     inputField.value = currentDescription;
-
     p.replaceWith(inputField);
     inputField.focus();
-
     inputField.addEventListener('keypress', (event) => {
       if (event.key === 'Enter') {
         task.description = inputField.value.trim();
-        this.saveTasksToLocalStorage();
-        this.renderTasks();
+        this.saveAndRenderTasks();
       }
     });
-
     inputField.addEventListener('blur', () => {
       task.description = inputField.value.trim();
-      this.saveTasksToLocalStorage();
-      this.renderTasks();
+      this.saveAndRenderTasks();
     });
+  }
+
+  handleToggleTaskComplete(li) {
+    const task = this.getTaskFromListItem(li);
+    const checkbox = li.querySelector('.checkbox');
+    li.classList.toggle('overline');
+    task.completed = checkbox.checked;
+    this.saveAndRenderTasks();
+  }
+
+  handleDeleteTask(li) {
+    const task = this.getTaskFromListItem(li);
+    this.tasks = this.tasks.filter((t) => t.index !== task.index);
+    this.reindexTasks();
+    this.saveAndRenderTasks();
+  }
+
+  getTaskFromListItem(li) {
+    const index = Array.from(this.ul.children).indexOf(li);
+    return this.tasks[index];
+  }
+
+  sortTasksByIndex() {
+    this.tasks.sort((a, b) => a.index - b.index);
+  }
+
+  reindexTasks() {
+    this.tasks.forEach((task, index) => {
+      task.index = index + 1;
+    });
+  }
+
+  saveAndRenderTasks() {
+    this.saveTasksToLocalStorage();
+    this.renderTasks();
   }
 
   addNewTask(description) {
@@ -88,26 +109,13 @@ export default class TaskManager {
     if (newTaskDescription !== '') {
       const newTask = new Task(newTaskDescription, false, this.tasks.length + 1);
       this.tasks.push(newTask);
-      this.saveTasksToLocalStorage();
-      this.renderTasks();
+      this.saveAndRenderTasks();
     }
-  }
-
-  deleteTask(taskToDelete) {
-    this.tasks = this.tasks.filter((task) => task.index !== taskToDelete.index);
-    this.tasks.forEach((task, index) => {
-      task.index = index + 1;
-    });
-    this.saveTasksToLocalStorage();
-    this.renderTasks();
   }
 
   deleteCompletedTasks() {
     this.tasks = this.tasks.filter((task) => !task.completed);
-    this.tasks.forEach((task, index) => {
-      task.index = index + 1;
-    });
-    this.saveTasksToLocalStorage();
-    this.renderTasks();
+    this.reindexTasks();
+    this.saveAndRenderTasks();
   }
 }
