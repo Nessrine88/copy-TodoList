@@ -3,24 +3,6 @@ import Task from './task.js';
 export default class TaskManager {
   constructor() {
     this.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-    this.todoList = document.getElementById('todoList');
-    this.ul = document.querySelector('.list-container');
-    this.initListeners();
-    this.renderTasks();
-  }
-
-  initListeners() {
-    this.ul.addEventListener('click', (event) => {
-      const li = event.target.closest('li');
-      if (!li) return;
-      if (event.target.classList.contains('fa-trash-can')) {
-        this.handleDeleteTask(li);
-      } else if (event.target.classList.contains('checkbox')) {
-        this.handleToggleTaskComplete(li);
-      } else {
-        this.handleEditTask(li);
-      }
-    });
   }
 
   saveTasksToLocalStorage() {
@@ -28,13 +10,47 @@ export default class TaskManager {
   }
 
   renderTasks() {
+    const todoList = document.getElementById('todoList');
+    const ul = document.querySelector('.list-container');
+
     this.sortTasksByIndex();
-    this.ul.innerHTML = '';
+
+    ul.innerHTML = '';
+
     this.tasks.forEach((task) => {
-      this.ul.appendChild(this.createTaskElement(task));
+      const li = this.createTaskElement(task);
+
+      const optionIcon = li.querySelector('.fa-ellipsis-vertical');
+      optionIcon.addEventListener('click', (event) => {
+        event.stopPropagation();
+        optionIcon.classList.replace('fa-ellipsis-vertical', 'fa-trash-can');
+        li.style.backgroundColor = '#FFF9C4';
+
+        const trashIcon = li.querySelector('.fa-trash-can');
+        trashIcon.addEventListener('click', () => {
+          ul.removeChild(li);
+          this.deleteTask(task);
+        });
+      });
+
+      const checkbox = li.querySelector('.checkbox');
+      checkbox.addEventListener('click', (event) => {
+        event.stopPropagation();
+        li.classList.toggle('overline');
+        task.completed = checkbox.checked;
+        this.saveAndRenderTasks();
+      });
+
+      li.addEventListener('click', () => {
+        this.editTask(li, task);
+      });
+
+      ul.appendChild(li);
     });
-    this.todoList.appendChild(this.ul);
+
+    todoList.appendChild(ul);
   }
+  /* eslint-disable */
 
   createTaskElement(task) {
     const li = document.createElement('li');
@@ -48,55 +64,29 @@ export default class TaskManager {
     return li;
   }
 
-  handleEditTask(li) {
-    const task = this.getTaskFromListItem(li);
+  editTask(li, task) {
     const p = li.querySelector('p');
     const currentDescription = task.description;
+
     const inputField = document.createElement('input');
     inputField.type = 'text';
     inputField.value = currentDescription;
+
     p.replaceWith(inputField);
     inputField.focus();
-    inputField.addEventListener('keypress', (event) => {
-      if (event.key === 'Enter') {
-        task.description = inputField.value.trim();
-        this.saveAndRenderTasks();
-      }
-    });
-    inputField.addEventListener('blur', () => {
+
+    const saveChanges = () => {
       task.description = inputField.value.trim();
       this.saveAndRenderTasks();
+    };
+
+    inputField.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        saveChanges();
+      }
     });
-  }
 
-  handleToggleTaskComplete(li) {
-    const task = this.getTaskFromListItem(li);
-    const checkbox = li.querySelector('.checkbox');
-    li.classList.toggle('overline');
-    task.completed = checkbox.checked;
-    this.saveAndRenderTasks();
-  }
-
-  handleDeleteTask(li) {
-    const task = this.getTaskFromListItem(li);
-    this.tasks = this.tasks.filter((t) => t.index !== task.index);
-    this.reindexTasks();
-    this.saveAndRenderTasks();
-  }
-
-  getTaskFromListItem(li) {
-    const index = Array.from(this.ul.children).indexOf(li);
-    return this.tasks[index];
-  }
-
-  sortTasksByIndex() {
-    this.tasks.sort((a, b) => a.index - b.index);
-  }
-
-  reindexTasks() {
-    this.tasks.forEach((task, index) => {
-      task.index = index + 1;
-    });
+    inputField.addEventListener('blur', saveChanges);
   }
 
   saveAndRenderTasks() {
@@ -113,9 +103,25 @@ export default class TaskManager {
     }
   }
 
+  deleteTask(taskToDelete) {
+    this.tasks = this.tasks.filter((task) => task.index !== taskToDelete.index);
+    this.reindexTasks();
+    this.saveAndRenderTasks();
+  }
+
   deleteCompletedTasks() {
     this.tasks = this.tasks.filter((task) => !task.completed);
     this.reindexTasks();
     this.saveAndRenderTasks();
+  }
+
+  sortTasksByIndex() {
+    this.tasks.sort((a, b) => a.index - b.index);
+  }
+
+  reindexTasks() {
+    this.tasks.forEach((task, index) => {
+      task.index = index + 1;
+    });
   }
 }
