@@ -1,0 +1,110 @@
+* {
+  text-decoration: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: #403f3ff1;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgb(234, 234, 234);
+  font-size: 1.25em;
+}
+
+li {
+  padding: 1em;
+  border: 0.05em solid rgba(168, 127, 127, 0.41);
+  box-sizing: border-box;
+}
+
+p {
+  font-family: 'intel', sans-serif;
+  font-weight: 300;
+}
+
+.checkbox {
+  margin-right: 1em;
+}
+
+#todoList {
+  width: 80%;
+  background-color: #fff;
+  box-shadow: 0.1em 0.2em 0.25em rgba(0, 0, 0, 0.2);
+  padding-top: 0.5em;
+  margin-top: 7em;
+}
+
+.header {
+  font-size: 1.2em;
+  margin: 3em 0 0 0.5em;
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 1em;
+}
+
+#icons {
+  float: right;
+  width: 1em;
+  cursor: grab;
+}
+
+.headerIcon {
+  float: right;
+  width: 1em;
+  margin: 1.5em 2em 0.25em 0;
+}
+
+.fa-solid {
+  float: right;
+}
+
+.fa-arrows-rotate {
+  margin: 4em 0.5em 0 0;
+}
+
+input {
+  border: none;
+}
+
+.input-form input {
+  width: 100%;
+  font-size: 0.9em;
+  padding: 0.75em 0.5em;
+  position: relative;
+  background-color: #fff;
+  border: 0.05em solid #ddd;
+  font-style: italic;
+}
+
+.fa-rotate-270 {
+  position: relative;
+  right: 0.5em;
+  bottom: 1em;
+}
+
+#xbtn {
+  width: 80%;
+  border: none;
+  border-radius: 0.2em;
+  cursor: pointer;
+  box-shadow: 0.1em 0.2em 0.25em rgba(0, 0, 0, 0.2);
+  padding: 1em 1em;
+  font-size: 1em;
+}
+
+.overline {
+  text-decoration: line-through;
+}
+
+.fa-trash-can {
+  cursor: pointer;
+}
+
+.fa-ellipsis-vertical {
+  cursor: move;
+}
